@@ -1,7 +1,9 @@
 from typing import List
 
-from fastapi import APIRouter, Body, Depends
-from starlette.status import HTTP_201_CREATED
+from fastapi import APIRouter, Body, Depends, HTTPException
+from starlette.status import HTTP_201_CREATED, \
+                             HTTP_404_NOT_FOUND, \
+                             HTTP_422_UNPROCESSABLE_ENTITY
 
 from app.models.projects import ProjectCreate, ProjectPublic
 from app.db.repositories.projects import ProjectsRepository
@@ -10,14 +12,15 @@ from app.api.dependecies.database import get_repository
 router = APIRouter()
 
 
-@router.get('/')
-async def get_all_projects() -> List[dict]:
-    projects = [
-        {'id': 1, 'project_name': 'some project', 'description': 'this is projects'},
-        {'id': 2, 'project_name': 'anpother project', 'description': 'that is projects'},
-    ]
+@router.get("/{id}/", response_model=ProjectPublic, name="projects:get-project-by-id")
+async def get_project_by_id(id: int, project_repo: ProjectsRepository = Depends(get_repository(ProjectsRepository))) -> ProjectPublic:
+    project = await project_repo.get_project_by_id(id=id)
+    if not project:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail="No project found with that id. "
+        )
 
-    return projects
+    return project
 
 
 @router.post(
@@ -30,7 +33,9 @@ async def create_new_project(
     new_project: ProjectCreate = Body(...,embed=True),
     projects_repo: ProjectsRepository = Depends(get_repository(ProjectsRepository)),
 ) -> ProjectPublic:
-    created_project = await projects_repo.create_project(new_project=new_project)
-
+    try:
+        created_project = await projects_repo.create_project(new_project=new_project)
+    except:
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY)
     return created_project
     

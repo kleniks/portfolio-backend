@@ -22,6 +22,7 @@ class ProjectInDB(IDModelMixin, ProjectBase):
     title: str
     description: str
     image: str
+    
 
 
 class ProjectPublic(IDModelMixin, ProjectBase):

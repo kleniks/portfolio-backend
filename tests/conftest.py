@@ -2,6 +2,7 @@ import warnings
 import os
 
 import pytest
+import pytest_asyncio
 from asgi_lifespan import LifespanManager
 
 from fastapi import FastAPI
@@ -12,11 +13,11 @@ import alembic
 from alembic.config import Config
 
 
-# Применяем миграции в начале и в конце тестирования. Upgrade и Downgrade соответственно.
+# Apply migrations at beginning and end of testing session
 @pytest.fixture(scope="session")
 def apply_migrations():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    os.environ["TESTING"] = 1
+    os.environ["TESTING"] = "1"
     config = Config("alembic.ini")
 
     alembic.command.upgrade(config, "head")
@@ -24,31 +25,27 @@ def apply_migrations():
     alembic.command.downgrade(config, "base")
 
 
-# Создаем новый экземпляр приложения для тестов
+# Create a new application for testing
 @pytest.fixture
 def app(apply_migrations: None) -> FastAPI:
-    from app.api.server import get_appliction
+    from app.api.server import get_application
 
-    return get_appliction()
+    return  get_application()
 
 
-# Ссылка на DB
-@pytest.fixture
-async def db(app: FastAPI) -> Database:
+# Grab a reference to our database when needed
+@pytest_asyncio.fixture
+def db(app: FastAPI) -> Database:
     return app.state._db
 
 
-# Создаем запросы 
-@pytest.fixture
+# Make requests in our tests
+@pytest_asyncio.fixture
 async def client(app: FastAPI) -> AsyncClient:
-    async with AsyncClient(
-        app=app,
-        base_url="http://testserver",
-        headers={"Content-Type": "application/json"}
-    ) as client:
-        yield client
-
-
-
-
-
+    async with LifespanManager(app):
+        async with AsyncClient(
+            app=app,
+            base_url="http://testserver",
+            headers={"Content-Type": "application/json"}
+        ) as client:
+            yield client

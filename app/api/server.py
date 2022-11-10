@@ -5,7 +5,7 @@ from app.core import config, tasks
 from app.api.routes import router as api_router
 
 
-def get_appliction():
+def get_application():
     app = FastAPI(title=config.PROJECT_NAME, version=config.VERSION)
 
     app.add_middleware(
@@ -24,4 +24,4 @@ def get_appliction():
     return app
 
 
-app = get_appliction()
+app = get_application()
