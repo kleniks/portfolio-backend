@@ -73,10 +73,12 @@ class TestCreateProject:
 
 
 class TestGetProjetc:
-    async def test_get_project_by_id(self, app: FastAPI, client: AsyncClient) -> None:
+    async def test_get_project_by_id(
+        self, app: FastAPI, client: AsyncClient, test_project: ProjectInDB
+        ) -> None:
         res = await client.get(
-            app.url_path_for("projects:get-project-by-id", id=1)
+            app.url_path_for("projects:get-project-by-id", id=test_project.id)
         )
         assert res.status_code == HTTP_200_OK
         project = ProjectInDB(**res.json())
-        assert project.id == 1
+        assert project == test_project

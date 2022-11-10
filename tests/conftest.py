@@ -12,6 +12,9 @@ from databases import Database
 import alembic
 from alembic.config import Config
 
+from app.models.projects import ProjectCreate, ProjectInDB
+from app.db.repositories.projects import ProjectsRepository 
+
 
 # Apply migrations at beginning and end of testing session
 @pytest.fixture(scope="session")
@@ -49,3 +52,15 @@ async def client(app: FastAPI) -> AsyncClient:
             headers={"Content-Type": "application/json"}
         ) as client:
             yield client
+
+
+@pytest.fixture
+async def test_project(db: Database) -> ProjectInDB:
+    project_repo = ProjectsRepository(db)
+    new_project = ProjectCreate(
+        title="fake project title",
+        description="fake project description",
+        image="fake_image.jpg"
+    )
+
+    return await project_repo.create_project(new_project=new_project)
