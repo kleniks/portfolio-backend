@@ -54,12 +54,12 @@ async def client(app: FastAPI) -> AsyncClient:
             yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_project(db: Database) -> ProjectInDB:
     project_repo = ProjectsRepository(db)
     new_project = ProjectCreate(
-        title="fake project title",
-        description="fake project description",
+        title="fake title",
+        description="fake description projects",
         image="fake_image.jpg"
     )
 

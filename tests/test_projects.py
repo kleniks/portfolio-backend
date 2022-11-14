@@ -82,3 +82,19 @@ class TestGetProjetc:
         assert res.status_code == HTTP_200_OK
         project = ProjectInDB(**res.json())
         assert project == test_project
+
+    @pytest.mark.parametrize(
+        "id, status_code",
+        (
+            (500, 404),
+            (-1, 404),
+            (None, 422),
+        ),
+    )
+    async def test_wrong_id_returns_error(
+        self, app: FastAPI, client: AsyncClient, id: int, status_code: int
+    ) -> None:
+        res = await client.get(
+            app.url_path_for("projects:get-project-by-id", id=id)
+        )
+        assert res.status_code == status_code
